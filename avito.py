@@ -7,6 +7,7 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from typing import Optional, Dict, List, Union
+from exceptions import PageSourceNotConfigured
 
 
 class AvitoParser:
@@ -64,6 +65,9 @@ class AvitoParser:
         This function parse the Avito website and return a data
         :return: Dict, return the parse data
         """
+
+        if self.soup is None:
+            raise PageSourceNotConfigured("Run the get_in_avito() function first")
 
         container = self.soup.select(selector=self.selector)
 

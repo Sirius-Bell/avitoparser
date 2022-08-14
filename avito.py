@@ -5,6 +5,8 @@
 # Python 3.10.5
 
 from selenium import webdriver
+from bs4 import BeautifulSoup
+from typing import Optional, Dict, List, Union
 
 
 class AvitoParser:
@@ -24,6 +26,7 @@ class AvitoParser:
 
         self.city: str = city
         self.page: int = page
+        self.soup: Optional[BeautifulSoup] = None
 
     def __str__(self) -> str:
         """
@@ -51,6 +54,13 @@ class AvitoParser:
         """
 
         self.driver.get(url)
+        self.soup = BeautifulSoup(self.driver.page_source)
+
+    def parse(self) -> List[Union[Dict[str, int], Dict[str, str]]]:
+        """
+        This function parse the Avito website and return a data
+        :return: Dict, return the parse data
+        """
 
 
 # https://avito.ru/sankt-peterburg

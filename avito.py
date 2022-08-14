@@ -56,7 +56,7 @@ class AvitoParser:
         self.driver.get(url)
         self.soup = BeautifulSoup(self.driver.page_source)
 
-    def parse(self) -> List[Union[Dict[str, int], Dict[str, str]]]:
+    def parse(self) -> List[Dict[str, Union[int, str]]]:
         """
         This function parse the Avito website and return a data
         :return: Dict, return the parse data

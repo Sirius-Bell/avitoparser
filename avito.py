@@ -27,6 +27,9 @@ class AvitoParser:
         self.city: str = city
         self.page: int = page
         self.soup: Optional[BeautifulSoup] = None
+        self.selector: str = 'div.iva-item-root-_lk9K.photo-slider-slider-S15A_.iva-item-list-rfgcH.' \
+                             'iva-item-redesign-rop6P.iva-item-responsive-_lbhG.items-item-My3ih.items-listItem-Gd1jN.'\
+                             'js-catalog-item-enum '
 
     def __str__(self) -> str:
         """
@@ -49,12 +52,12 @@ class AvitoParser:
     def get_in_avito(self, url: str) -> None:
         """
         This function visits the site Avito and transmits data to bs4
-        :param url: String, url to get in
+        :param url: String, url to get inсп
         :return: None
         """
 
         self.driver.get(url)
-        self.soup = BeautifulSoup(self.driver.page_source)
+        self.soup = BeautifulSoup(self.driver.page_source, 'lxml')
 
     def parse(self) -> List[Dict[str, Union[int, str]]]:
         """
@@ -62,6 +65,16 @@ class AvitoParser:
         :return: Dict, return the parse data
         """
 
+        container = self.soup.select(selector=self.selector)
+
+        for item in container:
+            print(item)
+
 
 # https://avito.ru/sankt-peterburg
 # https://avito.ru/sankt-peterburg/kvartiry/prodam-ASgBAgICAUSSA8YQ
+
+if __name__ == "__main__":
+    test = AvitoParser()
+    test.get_in_avito(test.generate_search_url("бампер"))
+    test.parse()

@@ -6,8 +6,9 @@
 
 from selenium import webdriver
 from bs4 import BeautifulSoup
-from typing import Optional, Dict, List, Union
+from typing import Optional, List
 from exceptions import PageSourceNotConfigured
+from model import Advertisement
 
 
 class AvitoParser:
@@ -60,7 +61,7 @@ class AvitoParser:
         self.driver.get(url)
         self.soup = BeautifulSoup(self.driver.page_source, 'lxml')
 
-    def parse(self) -> List[Dict[str, Union[int, str]]]:
+    def parse(self) -> List[Advertisement]:
         """
         This function parse the Avito website and return a data
         :return: Dict, return the parse data

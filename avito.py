@@ -4,24 +4,29 @@
 # ---Lonely_Dark---
 # Python 3.10.5
 
-from selenium import webdriver
-from bs4 import BeautifulSoup
 from typing import Optional, List
+from urllib.parse import quote
+
+from bs4 import BeautifulSoup
+from selenium import webdriver
+
 from exceptions import PageSourceNotConfigured
-from model import Advertisement
 from logger import get_logger
+from model import Advert
 
 
 class AvitoParser:
 
-    def __init__(self, city: str = "moskva", page: int = 1, driver: str = "chrome") -> None:
+    def __init__(self, city: str = "moskva", page: int = 1,
+                 driver: str = "chrome") -> None:
         """
-        This library will help you parse the necessary data from the Avito website
+        This library will help you parse the necessary data from the Avito
         :param city: City to search for
         :param page: Page to start from
         :param driver: Driver for selenium, on default uses chrome driver
         """
 
+        self.list_adverts: Optional[List[Advert]] = None
         if driver == "firefox":
             self.driver: webdriver.Firefox = webdriver.Firefox()
         else:
@@ -30,12 +35,14 @@ class AvitoParser:
         self.city: str = city
         self.page: int = page
         self.soup: Optional[BeautifulSoup] = None
-        self.selector: str = 'div.iva-item-root-_lk9K.photo-slider-slider-S15A_.iva-item-list-rfgcH.' \
-                             'iva-item-redesign-rop6P.iva-item-responsive-_lbhG.items-item-My3ih.items-listItem-Gd1jN.'\
+        self.selector: str = 'div.iva-item-root-_lk9K.photo-slider-slider' \
+                             '-S15A_.iva-item-list-rfgcH.' \
+                             'iva-item-redesign-rop6P.iva-item-responsive' \
+                             '-_lbhG.items-item-My3ih.items-listItem-Gd1jN.' \
                              'js-catalog-item-enum '
 
-        self.logger = get_logger(__name__, turn_file_handler=True)
-        self.logger.info("Starts the avitoparser...")
+        self.__logger = get_logger(__name__, turn_file_handler=True)
+        self.__logger.info("Starts the avitoparser...")
 
     def __str__(self) -> str:
         """
@@ -43,7 +50,8 @@ class AvitoParser:
         :return: String
         """
 
-        return 'AvitoParser(city=%s, page=%s, driver=%s)' % (self.city, self.page, self.driver)
+        return 'AvitoParser(city=%s, page=%s, driver=%s)' % (
+            self.city, self.page, self.driver)
 
     def generate_search_url(self, query: str) -> str:
         """
@@ -52,43 +60,61 @@ class AvitoParser:
         :return: String, return the url
         """
 
-        url: str = "https://avito.ru/%s?q=%s&p=%s" % (self.city, query, self.page)
-        self.logger.debug("get URL: %s" % url)
+        urlencoded_quote = quote(query)
+
+        url: str = "https://avito.ru/%s?q=%s&p=%s" % (
+            self.city, urlencoded_quote, self.page)
+        self.__logger.debug("get URL: %s" % url)
         return url
 
     def get_in_avito(self, url: str) -> None:
         """
         This function visits the site Avito and transmits data to bs4
-        :param url: String, url to get inсп
+        :param url: String, url to get in
         :return: None
         """
 
         self.driver.get(url)
         self.soup = BeautifulSoup(self.driver.page_source, 'lxml')
 
-        self.logger.info("Init successfully")
-        self.logger.info("Goto parse phase...")
+        self.__logger.info("Init successfully")
+        self.__logger.info("Goto parse phase...")
 
-    def parse(self) -> List[Advertisement]:
+    def _parse_block(self, item):
+        description: str = item.find('div', attrs={
+            'class': 'iva-item-text-Ge6dR iva-item-description-FDgK4 '
+                     'text-text-LurtD text-size-s-BxGpL'}).get_text()
+        price_step = item.find('div',
+                               attrs={'class': 'iva-item-priceStep-uq2CQ'}) \
+            .find('meta', attrs={'itemprop': 'price'}).get('content')
+        title = item.find('div',
+                          attrs={'class': 'iva-item-titleStep-pdebR'}).find(
+            'h3').get_text()
+
+        return Advert(title=title, price=price_step, description=description)
+
+    def parse(self) -> List[Advert]:
         """
         This function parse the Avito website and return a data
-        :return: Dict, return the parse data
+        :return: List[Advert], return the parse data
         """
 
+        self.list_adverts = []
+
         if self.soup is None:
-            self.logger.critical("soup is None")
-            raise PageSourceNotConfigured("Run the get_in_avito() function first")
+            self.__logger.critical("soup is None")
+            raise PageSourceNotConfigured(
+                "Run the get_in_avito() function first")
 
         container = self.soup.select(selector=self.selector)
-
         for item in container:
-            print(item)
+            self.list_adverts.append(self._parse_block(item))
 
+        return self.list_adverts
 
-# https://avito.ru/sankt-peterburg
-# https://avito.ru/sankt-peterburg/kvartiry/prodam-ASgBAgICAUSSA8YQ
 
 if __name__ == "__main__":
     test = AvitoParser()
-    test.get_in_avito(test.generate_search_url("бампер"))
-    test.parse()
+    test.get_in_avito(test.generate_search_url("купить квартиру"))
+    adv = test.parse()
+    print(adv)

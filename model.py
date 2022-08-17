@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class Advertisement:
+class Advert:
     """
     Dataclass for Advertisements
     """

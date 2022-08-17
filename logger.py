@@ -8,8 +8,9 @@
 import logging
 import coloredlogs
 
-log_format: str = '[%(asctime)s] [%(filename)s] [%(levelname)s] [%(lineno)d]: %(' \
-         'message)s '
+log_format: str = '[%(asctime)s] [%(filename)s] [%(levelname)s] [%(' \
+                  'lineno)d]: %(' \
+                  'message)s '
 
 formatter = logging.Formatter(log_format)
 formatter_color = coloredlogs.ColoredFormatter(log_format)
@@ -42,7 +43,8 @@ def stream_handler() -> logging.StreamHandler:
     return handler
 
 
-def get_logger(name: str, turn_file_handler: bool = False, filename: str = "avito.log") -> logging.Logger:
+def get_logger(name: str, turn_file_handler: bool = False,
+               filename: str = "avito.log") -> logging.Logger:
     """
     Gets the __name__ logger
     :param name: String, logger __name__

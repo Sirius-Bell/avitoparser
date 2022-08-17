@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List
 from exceptions import PageSourceNotConfigured
 from model import Advertisement
+from logger import get_logger
 
 
 class AvitoParser:
@@ -33,6 +34,9 @@ class AvitoParser:
                              'iva-item-redesign-rop6P.iva-item-responsive-_lbhG.items-item-My3ih.items-listItem-Gd1jN.'\
                              'js-catalog-item-enum '
 
+        self.logger = get_logger(__name__, turn_file_handler=True)
+        self.logger.info("Starts the avitoparser...")
+
     def __str__(self) -> str:
         """
         String implementation of class AvitoParser
@@ -49,6 +53,7 @@ class AvitoParser:
         """
 
         url: str = "https://avito.ru/%s?q=%s&p=%s" % (self.city, query, self.page)
+        self.logger.debug("get URL: %s" % url)
         return url
 
     def get_in_avito(self, url: str) -> None:
@@ -61,6 +66,9 @@ class AvitoParser:
         self.driver.get(url)
         self.soup = BeautifulSoup(self.driver.page_source, 'lxml')
 
+        self.logger.info("Init successfully")
+        self.logger.info("Goto parse phase...")
+
     def parse(self) -> List[Advertisement]:
         """
         This function parse the Avito website and return a data
@@ -68,6 +76,7 @@ class AvitoParser:
         """
 
         if self.soup is None:
+            self.logger.critical("soup is None")
             raise PageSourceNotConfigured("Run the get_in_avito() function first")
 
         container = self.soup.select(selector=self.selector)

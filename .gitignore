@@ -2,7 +2,11 @@
 .idea
 
 # Ignore Python cache
-__pycache__
+avitoparser/__pycache__
 
 # Ignore log file
-avito.log
+avitoparser/avito.log
+
+# Ignore dist
+dist
+avitoparser.egg-info

@@ -7,6 +7,7 @@
 from typing import Optional, List
 from urllib.parse import quote
 
+import bs4.element
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
@@ -80,7 +81,12 @@ class AvitoParser:
         self.__logger.info("Init successfully")
         self.__logger.info("Goto parse phase...")
 
-    def _parse_block(self, item):
+    def _parse_block(self, item: bs4.element.Tag) -> Advert:
+        """
+        This function parse the block of advert
+        :param item:
+        :return:
+        """
         description: str = item.find('div', attrs={
             'class': 'iva-item-text-Ge6dR iva-item-description-FDgK4 '
                      'text-text-LurtD text-size-s-BxGpL'}).get_text()
@@ -106,10 +112,13 @@ class AvitoParser:
             raise PageSourceNotConfigured(
                 "Run the get_in_avito() function first")
 
-        container = self.soup.select(selector=self.selector)
+        container: bs4.element.ResultSet = self.soup.select(
+            selector=self.selector)
+        self.__logger.debug(type(container))
         for item in container:
             self.list_adverts.append(self._parse_block(item))
 
+        self.page += 1
         return self.list_adverts
 
 

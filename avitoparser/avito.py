@@ -119,7 +119,7 @@ class AvitoParser:
             self.list_adverts.append(self._parse_block(item))
 
         self.page += 1
-        return self.list_adverts
+        return list(set(self.list_adverts))
 
 
 if __name__ == "__main__":

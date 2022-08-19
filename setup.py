@@ -8,7 +8,7 @@ requirements = ["beautifulsoup4>=4.11.1", "coloredlogs>=15.0.1", "selenium"
                 "lxml>=4.9.1"]
 
 setup(name='avitoparser',
-      version='0.1',
+      version='0.2',
       url='https://github.com/Lonely-Dark/avitoparser',
       license='GPLv3',
       author='Lonely Dark',

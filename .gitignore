@@ -10,3 +10,6 @@ avitoparser/avito.log
 # Ignore dist
 dist
 avitoparser.egg-info
+
+# Ignore .csv
+avitoparser/*.csv

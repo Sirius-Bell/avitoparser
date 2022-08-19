@@ -4,6 +4,7 @@
 # ---Lonely_Dark---
 # Python 3.10.5
 
+import csv
 from typing import Optional, List
 from urllib.parse import quote
 
@@ -19,7 +20,8 @@ from model import Advert
 class AvitoParser:
 
     def __init__(self, city: str = "moskva", page: int = 1,
-                 driver: str = "chrome") -> None:
+                 driver: str = "chrome", export_csv: bool = True,
+                 filename_to_export: str = "avitoparser_output.csv") -> None:
         """
         This library will help you parse the necessary data from the Avito
         :param city: City to search for
@@ -27,11 +29,17 @@ class AvitoParser:
         :param driver: Driver for selenium, on default uses chrome driver
         """
 
+        self.rows: List[str] = ['Title', 'Description', 'Price']
         self.list_adverts: Optional[List[Advert]] = None
         if driver == "firefox":
             self.driver: webdriver.Firefox = webdriver.Firefox()
         else:
             self.driver: webdriver.Chrome = webdriver.Chrome()
+
+        if export_csv is True:
+            with open(filename_to_export, "w") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(self.rows)
 
         self.city: str = city
         self.page: int = page
@@ -41,6 +49,8 @@ class AvitoParser:
                              'iva-item-redesign-rop6P.iva-item-responsive' \
                              '-_lbhG.items-item-My3ih.items-listItem-Gd1jN.' \
                              'js-catalog-item-enum '
+        self.filename_to_export: str = filename_to_export
+        self.export_csv: bool = export_csv
 
         self.__logger = get_logger(__name__, turn_file_handler=True)
         self.__logger.info("Starts the avitoparser...")
@@ -54,17 +64,33 @@ class AvitoParser:
         return 'AvitoParser(city=%s, page=%s, driver=%s)' % (
             self.city, self.page, self.driver)
 
-    def generate_search_url(self, query: str) -> str:
+    def generate_search_url(self, query: str, sort: Optional[str] = None,
+                            owner: Optional[str] = None,
+                            with_images: bool = False) -> str:
         """
         This function generates an url to search the advertisement
         :param query: String, what to find
+        :param sort: String, sort adverts:
+            'date' - date sorting
+            'price' - price sorting
+            'price_desc' - price descending
+            'None' - default value
+        :param owner: String, owners advert:
+            'private' - private advert
+            'company' - company advert
+            'None' - default value
+        :param with_images: Boolean, with images or not
         :return: String, return the url
         """
 
         urlencoded_quote = quote(query)
+        sort_values = {'date': '104', 'price': '1', 'price_desc': '2',
+                       None: '101'}
+        owners = {'private': '1', 'company': '2', None: '0'}
 
-        url: str = "https://avito.ru/%s?q=%s&p=%s" % (
-            self.city, urlencoded_quote, self.page)
+        url: str = "https://avito.ru/%s?q=%s&p=%s&i=%s&s=%s&user=%s" % (
+            self.city, urlencoded_quote, self.page, int(with_images),
+            sort_values[sort], owners[owner])
         self.__logger.debug("get URL: %s" % url)
         return url
 
@@ -78,14 +104,25 @@ class AvitoParser:
         self.driver.get(url)
         self.soup = BeautifulSoup(self.driver.page_source, 'lxml')
 
-        self.__logger.info("Init successfully")
         self.__logger.info("Goto parse phase...")
+
+    def save_in_csv(self, items: List[Advert]) -> None:
+        """
+        This function exports csv table
+        :param items: List[Advert], it's a adverts
+        :return: None
+        """
+        with open(self.filename_to_export, 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            for advert in items:
+                writer.writerow(
+                    [advert.title, advert.description, f"{advert.price:_}"])
 
     def _parse_block(self, item: bs4.element.Tag) -> Advert:
         """
         This function parse the block of advert
-        :param item:
-        :return:
+        :param item: bs4.element.Tag, block of advert
+        :return: Advert
         """
         description: str = item.find('div', attrs={
             'class': 'iva-item-text-Ge6dR iva-item-description-FDgK4 '
@@ -97,12 +134,14 @@ class AvitoParser:
                           attrs={'class': 'iva-item-titleStep-pdebR'}).find(
             'h3').get_text()
 
-        return Advert(title=title, price=price_step, description=description)
+        return Advert(title=title, price=int(price_step),
+                      description=description)
 
-    def parse(self) -> List[Advert]:
+    def parse(self) -> Optional[List[Advert]]:
         """
         This function parse the Avito website and return a data
-        :return: List[Advert], return the parse data
+        :return:
+        List[Advert], return the parse data or None if export_csv is True
         """
 
         self.list_adverts = []
@@ -114,16 +153,22 @@ class AvitoParser:
 
         container: bs4.element.ResultSet = self.soup.select(
             selector=self.selector)
-        self.__logger.debug(type(container))
         for item in container:
             self.list_adverts.append(self._parse_block(item))
 
         self.page += 1
+        self.__logger.info(f"Page +1: {self.page}")
+        self.__logger.info("Successful")
+
+        if self.export_csv is True:
+            self.save_in_csv(list(set(self.list_adverts)))
+            return
+
         return list(set(self.list_adverts))
 
 
 if __name__ == "__main__":
     test = AvitoParser()
-    test.get_in_avito(test.generate_search_url("купить квартиру"))
-    adv = test.parse()
-    print(adv)
+    for i in range(2):
+        test.get_in_avito(test.generate_search_url("купить квартиру"))
+        adv = test.parse()

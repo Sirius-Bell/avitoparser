@@ -14,4 +14,4 @@ class Advert:
     """
     title: str
     description: str
-    price: str
+    price: int

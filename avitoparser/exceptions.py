@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-# ---Lonely_Dark---
-# Python 3.10.5
+# ---Sirius Bell---
+# Python 3.11.4
 
 class PageSourceNotConfigured(Exception):
 

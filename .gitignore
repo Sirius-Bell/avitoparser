@@ -4,8 +4,8 @@
 # Ignore Python cache
 avitoparser/__pycache__
 
-# Ignore log file
-avitoparser/avito.log
+# Ignore logs file
+avitoparser/*.log
 
 # Ignore dist
 dist
@@ -13,3 +13,6 @@ avitoparser.egg-info
 
 # Ignore .csv
 avitoparser/*.csv
+
+# Ignore lock file
+poetry.lock

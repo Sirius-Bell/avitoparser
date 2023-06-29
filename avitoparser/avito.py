@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-# ---Lonely_Dark---
-# Python 3.10.5
+# ---Sirius Bell---
+# Python 3.11.4
 
 import csv
 from typing import Optional, List
@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 from exceptions import PageSourceNotConfigured
-from logger import get_logger
+from loguru import logger
 from model import Advert
 
 
@@ -36,11 +36,6 @@ class AvitoParser:
         else:
             self.driver: webdriver.Chrome = webdriver.Chrome()
 
-        if export_csv is True:
-            with open(filename_to_export, "w") as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(self.rows)
-
         self.city: str = city
         self.page: int = page
         self.soup: Optional[BeautifulSoup] = None
@@ -52,7 +47,7 @@ class AvitoParser:
         self.filename_to_export: str = filename_to_export
         self.export_csv: bool = export_csv
 
-        self.__logger = get_logger(__name__, turn_file_handler=True)
+        self.__logger = logger
         self.__logger.info("Starts the avitoparser...")
 
     def __str__(self) -> str:
@@ -109,11 +104,12 @@ class AvitoParser:
     def save_in_csv(self, items: List[Advert]) -> None:
         """
         This function exports csv table
-        :param items: List[Advert], it's a adverts
+        :param items: List[Advert], it's an adverts
         :return: None
         """
-        with open(self.filename_to_export, 'a') as csvfile:
+        with open(self.filename_to_export, 'a', encoding="utf-8", newline='') as csvfile:
             writer = csv.writer(csvfile)
+            writer.writerow(self.rows)
             for advert in items:
                 writer.writerow(
                     [advert.title, advert.description, f"{advert.price:_}"])
@@ -124,15 +120,20 @@ class AvitoParser:
         :param item: bs4.element.Tag, block of advert
         :return: Advert
         """
-        description: str = item.find('div', attrs={
-            'class': 'iva-item-text-Ge6dR iva-item-description-FDgK4 '
-                     'text-text-LurtD text-size-s-BxGpL'}).get_text()
-        price_step = item.find('div',
-                               attrs={'class': 'iva-item-priceStep-uq2CQ'}) \
-            .find('meta', attrs={'itemprop': 'price'}).get('content')
-        title = item.find('div',
-                          attrs={'class': 'iva-item-titleStep-pdebR'}).find(
-            'h3').get_text()
+        try:
+            description: str = item.find('div', attrs={
+                'class': 'iva-item-descriptionStep-C0ty1'}).get_text()
+            price_step = item.find('div',
+                                   attrs={'class': 'iva-item-priceStep-uq2CQ'}) \
+                .find('meta', attrs={'itemprop': 'price'}).get('content')
+            title: str = item.find('div',
+                              attrs={'class': 'iva-item-title-py3i_'}).find(
+                'h3').get_text()
+        except AttributeError:
+            self.__logger.critical("Attribute error: NoneType")
+            description = "Error"
+            price_step = -1
+            title = "Error"
 
         return Advert(title=title, price=int(price_step),
                       description=description)
@@ -168,7 +169,7 @@ class AvitoParser:
 
 
 if __name__ == "__main__":
-    test = AvitoParser()
+    test = AvitoParser(driver="firefox")
     for i in range(2):
         test.get_in_avito(test.generate_search_url("купить квартиру"))
         adv = test.parse()

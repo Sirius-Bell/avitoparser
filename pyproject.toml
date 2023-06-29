@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "avitoparser"
+version = "0.1.0"
+description = ""
+authors = ["Sirius-Bell <vlad10game@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+selenium = "^4.10.0"
+bs4 = "^0.0.1"
+lxml = "^4.9.2"
+loguru = "^0.7.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
